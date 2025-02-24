@@ -1,0 +1,20 @@
+[package]
+name = "dsp-utils"
+version = "0.1.0"
+edition = "2021"
+
+authors = ["Garneek"]
+description = "DSP utility functions for nih_plug"
+license = "GNU General Public License v3.0"
+
+[dependencies]
+nih_plug = { git = "https://github.com/ardura/nih-plug.git", rev = "de315f902d7b5a75f80bc9d4164e4485bf2b34a1", features = ["assert_process_allocs"] }
+
+[lib]
+path = "src/lib.rs"
+
+[profile.release]
+opt-level = 3
+
+[profile.dev]
+opt-level = 3

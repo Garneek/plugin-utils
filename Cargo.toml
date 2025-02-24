@@ -1,0 +1,28 @@
+[package]
+name = "plugin-utils"
+version = "0.1.0"
+edition = "2021"
+
+authors = ["Garneek"]
+description = "Utility functions for nih_plug"
+license = "GNU General Public License v3.0"
+
+[dependencies]
+dsp-utils = {path = "dsp-utils"}
+egui-utils = {path = "egui-utils"}
+
+[workspace]
+members = [
+  "dsp-utils",
+  "egui-utils",
+]
+
+[lib]
+path = "src/lib.rs"
+
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
+
