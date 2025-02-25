@@ -1,6 +1,6 @@
 [package]
 name = "dsp-utils"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 authors = ["Garneek"]
@@ -12,6 +12,7 @@ nih_plug = { git = "https://github.com/ardura/nih-plug.git", rev = "de315f902d7b
 
 [lib]
 path = "src/lib.rs"
+doctest = false
 
 [profile.release]
 opt-level = 3

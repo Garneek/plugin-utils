@@ -672,3 +672,17 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
+
+---
+
+Third-Party Licenses and Attributions:
+This project includes code from the following third-party projects:
+
+1. Actuate:
+   - Source: https://github.com/ardura/Actuate
+   - License: GNU General Public License v3.0
+   - Files/Code Snippets Used:
+       - ArcKnob struct and associated code
+   - Modifications: 
+       - ArcKnob modified to add easied configuration options, added 
+        more settings for visual style of the widget

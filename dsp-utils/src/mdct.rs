@@ -1,5 +1,33 @@
 mod dct;
 
+/// Mdct processor
+///
+/// Buffers some data to allow for smooth encoding and decoding. Forward mdct takes in a slice of length `block_size` and outputs
+/// its data into a slice of length `block_size * 2`. Inverse mdct does the opposite, and decodes the blocks.
+///
+/// Can be easily used in [`crate::SingleChannelProcessor`], by setting it as its field.
+///
+/// # Examples
+///
+/// ```
+/// let mut mdct = MDCT::new(4);
+///
+/// let block = vec![0_f32, 1_f32, -1_f32, 0_f32];
+/// let mut output = vec![0_f32; 8];
+///
+/// mdct.mdct(&block, &mut output);
+///
+/// let mut imdct_block = vec![0_f32; 4];
+/// mdct.imdct(&mut output, &mut imdct_block);
+///
+/// // We need two passes to fill in the buffers, that initialize with zeros. Because of that this element produces block_size
+/// // amount of samples of delay
+/// mdct.mdct(&block, &mut output);
+///
+/// let mut imdct_block = vec![0_f32; 4];
+/// mdct.imdct(&mut output, &mut imdct_block);
+/// println!("{:?}", imdct_block);
+/// ```
 pub struct MDCT {
     dct: dct::DCT,
     block_size: usize,
@@ -11,7 +39,12 @@ pub struct MDCT {
 }
 
 impl MDCT {
+    /// Initialize the processor with given `block_size`
+    ///
+    /// Panics if `block_size` is not a power of 2.
+    /// This function allocates memory, and should be used only in [`nih_plug::prelude::Plugin::initialize`] call
     pub fn new(block_size: usize) -> Self {
+        assert!(block_size.is_power_of_two());
         Self {
             dct: dct::DCT::new(block_size * 2),
             block_size,
@@ -30,24 +63,32 @@ impl MDCT {
         }
     }
 
-    // Processes sample block into some output.
-    // Sample block needs to be a power of 2.
-    // Output block should be 2 times larger then input block
-    pub fn mdct(&mut self, block: &[f32], output_target: &mut [f32]) {
+    /// Processes `block` into `output` slice with forward mdct
+    ///
+    /// `block` needs to be of length `block_size`
+    ///
+    /// `output_block` needs to be of length `block_size * 2`
+
+    // NOTE add assertion for above statement
+    pub fn mdct(&mut self, block: &[f32], output_block: &mut [f32]) {
         self.dct_buffer[self.block_size..self.block_size * 2]
             .copy_from_slice(&block[0..self.block_size]);
 
-        output_target.copy_from_slice(&self.dct_buffer);
+        output_block.copy_from_slice(&self.dct_buffer);
 
-        self.dct.dct(output_target, self.temp_buffer.as_mut_slice());
+        self.dct.dct(output_block, self.temp_buffer.as_mut_slice());
 
         let (first, second) = self.dct_buffer.split_at_mut(self.block_size);
         first.copy_from_slice(second);
     }
 
-    // Processes dct data into block of samples.
-    // Dct block needs to be a power of 2.
-    // Output block should be 2 times smaller then input block
+    /// Processes `block` into `output` slice with inverse mdct
+    ///
+    /// `dct_block` needs to be of length `block_size * 2`
+    ///
+    /// `output_block` needs to be of length `block_size`
+
+    // NOTE add assertion for above statement
     pub fn imdct(&mut self, dct_block: &mut [f32], output_block: &mut [f32]) {
         self.dct.idct(dct_block, self.temp_buffer.as_mut_slice());
 

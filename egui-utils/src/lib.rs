@@ -1,4 +1,6 @@
-pub mod image_macros;
+//! egui widgets and utility functions for nih_plug
+
+mod image_macros;
 
 mod widgets;
 pub use widgets::ArcKnob;
