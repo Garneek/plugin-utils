@@ -1,6 +1,6 @@
 [package]
 name = "plugin-utils"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 authors = ["Garneek"]
@@ -19,6 +19,7 @@ members = [
 
 [lib]
 path = "src/lib.rs"
+doctest = false
 
 [profile.dev]
 opt-level = 3

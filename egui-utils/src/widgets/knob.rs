@@ -11,7 +11,7 @@ use std::{
 };
 
 use lazy_static::lazy_static;
-use nih_plug::prelude::{new_nonzero_u32, Param, ParamSetter};
+use nih_plug::prelude::{Param, ParamSetter};
 use nih_plug_egui::egui::{
     self,
     epaint::{CircleShape, PathShape, PathStroke},
@@ -150,30 +150,119 @@ impl<'a, P: Param> SliderRegion<'a, P> {
     }
 }
 
+/// Knob style preset
+///
+/// Either set it as constant or parse it in compile time
+///
+/// If some value is set as `None`, then it will be left unchanged(default in most cases)
 pub struct KnobPreset {
+    /// Radius of the knob
+    ///
+    /// Needs to be assigned either in from_param or here
     pub radius: Option<f32>,
+    /// Color of the accents of the knob
+    ///
+    /// Default: `Black`
     pub line_color: Option<Color32>,
+    /// Default: `radius * 0.7`
     pub center_size: Option<f32>,
+    /// Width of lines in the knob
+    ///
+    /// Default: `radius * 0.1`
     pub line_width: Option<f32>,
+    /// Color of the knob
+    ///
+    /// Default: `Black`
     pub knob_color: Option<Color32>,
+    /// Default: `radius * 0.012`
     pub center_to_line_space: Option<f32>,
+    /// Whether there should be a tooltip on hover
+    ///
+    /// Default: `false`
     pub hover_text: Option<bool>,
+    /// Default: `true`
     pub show_center_value: Option<bool>,
+    /// Font size
+    ///
+    /// Default: `16.0`
     pub text_size: Option<f32>,
+    /// Should the outline be drawn
+    ///
+    /// Default: `false`
     pub outline: Option<bool>,
+    /// Padding around the knob
+    ///
+    /// Default: `radius * 0.125`
     pub padding: Option<f32>,
+    /// Should the label be shown
+    ///
+    /// Default: `true`, `false` for [`KnobLayout`] `Default` and `SquareNoLabel`
     pub show_label: Option<bool>,
+    /// If the label and value positions should be swapped
+    ///
+    /// Default: `false`
     pub swap_label_and_value: Option<bool>,
+    /// Override of the text color, by default the text color is the same as `line_color`
+    ///
+    /// Default: `Color32::Placeholder`
     pub text_color_override: Option<Color32>,
+    /// Set readability box visibility for text on other colors. Broken. The box is misaligned
+    ///
+    /// Default: `false`
     pub readable_box: Option<bool>,
+    /// Radius of corner rounding for background fill
+    ///
+    /// Default: `4.0`
     pub background_radius: Option<f32>,
+    /// Opacity of background fill
+    ///
+    /// Default: `0.6`
     pub background_opacity: Option<f32>,
+    /// Color of the background fill. Does not support alpha data
+    ///
+    /// Default: `Black`
     pub background_color: Option<Color32>,
-    pub layout: KnobLayout,
+    /// Plugin layout, look [`KnobLayout`]
+    ///
+    /// Needs to be assigned either in from_param or here
+    pub layout: Option<KnobLayout>,
+    /// Start angle of the arc.
+    ///
+    /// Default: `0.625`, except for [`KnobLayout::Default`]: `0.75`
     pub arc_start: Option<f32>,
+    /// End angle of the arc
+    ///
+    /// Default: `-0.75`, except for [`KnobLayout::Default`]: `-1.0`
     pub arc_end: Option<f32>,
 }
 
+/// Knob egui widget, mostly copied from <https://github.com/ardura/Actuate/>
+///
+/// Create it using [`ArcKnob::for_param`], the widget can be stylised both by calling individual functions, as well as
+/// by calling [`ArcKnob::apply_preset`] with a [`KnobPreset`]
+///
+/// # Examples
+///
+/// Initialize and stylize using individual functions
+///
+/// ```
+/// ui.add(
+///     // Parameter, setter supplied by nih_plug, radius, layout
+///     ArcKnob::for_param(&params.gain, setter, 32_f32, KnobLayout::Vertical)
+///         .set_padding(8_f32)
+///         .set_label("Gain label".to_string())
+/// )
+/// ```
+///
+/// Initialize using some [`KnobPreset`]
+///
+/// ```
+/// ui.add(
+///     // Parameter, setter, radius(temporary, will be overwritten by apply_preset), layout
+///     ArcKnob::for_param(&params.gain, setter, 0_f32, KnobLayout::Vertical)
+///         .apply_preset(&KNOB_PRESET);
+/// )
+/// ```
 pub struct ArcKnob<'a, P: Param> {
     slider_region: SliderRegion<'a, P>,
     radius: f32,
@@ -207,12 +296,19 @@ pub enum KnobStyle {
     Preset2,
 }
 
+/// Layout of the Knob egui widget, copied from <https://github.com/ardura/Actuate/>
+///
+///
 #[allow(dead_code)]
 #[derive(Copy, Clone, PartialEq)]
 pub enum KnobLayout {
+    /// Label and value data will be stacked vertically on top/bottom of the knob
     Vertical,
+    /// Label and value data will be put on the right of the knob, with both texts stacked on top of each other
     Horizonal,
+    /// Label and value data will be put on the right of the knob, both values will form one line of text
     HorizontalInline,
+    /// Small knob with no label or value data
     SquareNoLabel,
     Default,
 }
@@ -228,6 +324,10 @@ macro_rules! apply_preset_to_variable {
 
 #[allow(dead_code)]
 impl<'a, P: Param> ArcKnob<'a, P> {
+    /// Create a new knob for a specific param
+    ///
+    /// If you plan on later using [`ArcKnob::apply_preset`] you can set `radius` and `layout` to some temporary value,
+    /// as most likely you want to read those from [`KnobPreset`] anyway
     pub fn for_param(
         param: &'a P,
         param_setter: &'a ParamSetter,
@@ -274,9 +374,11 @@ impl<'a, P: Param> ArcKnob<'a, P> {
         }
     }
 
+    /// Applies a given preset.
+    ///
+    /// If a value of some field is `None`, the value will be left unchanged (if the knob is freshly initialized, it will be default)
     pub fn apply_preset(mut self, preset: &KnobPreset) -> Self {
-        self.layout = preset.layout;
-
+        apply_preset_to_variable!(self, preset, layout);
         apply_preset_to_variable!(self, preset, radius);
         apply_preset_to_variable!(self, preset, line_color);
         apply_preset_to_variable!(self, preset, knob_color);
@@ -317,6 +419,9 @@ impl<'a, P: Param> ArcKnob<'a, P> {
         self
     }
 
+    /// Sets the layout of the plugin
+    ///
+    /// If `layout` is `SquareNoLabel` or `Default`, `show_label` will be disabled
     pub fn set_layout(mut self, layout: KnobLayout) -> Self {
         self.layout = layout;
         match layout {
@@ -331,121 +436,123 @@ impl<'a, P: Param> ArcKnob<'a, P> {
         self
     }
 
-    // Set readability box visibility for text on other colors
+    /// Set readability box visibility for text on other colors
+    ///
+    /// Broken. The box is misaligned
     pub fn set_readable_box(mut self, show_box: bool) -> Self {
         self.readable_box = show_box;
         self
     }
 
-    // Change the text color if you want it separate from line color
+    /// Change the text color if you want it separate from line color
     pub fn override_text_color(mut self, text_color: Color32) -> Self {
         self.text_color_override = text_color;
         self
     }
 
-    // Undo newer swap label and value
+    /// Undo newer swap label and value
     pub fn set_swap_label_and_value(mut self, use_old: bool) -> Self {
         self.swap_label_and_value = use_old;
         self
     }
 
-    // Specify outline drawing
+    /// Specify outline drawing
     pub fn use_outline(mut self, new_bool: bool) -> Self {
         self.outline = new_bool;
         self
     }
 
-    // Specify showing value when mouse-over
+    /// Specify showing value when mouse-over
     pub fn use_hover_text(mut self, new_bool: bool) -> Self {
         self.hover_text = new_bool;
         self
     }
 
-    // Specify value when mouse-over
+    /// Specify value when mouse-over
     pub fn set_hover_text(mut self, new_text: String) -> Self {
         self.hover_text_content = new_text;
         self
     }
 
-    // Specify knob label
+    /// Specify knob label
     pub fn set_label(mut self, new_label: String) -> Self {
         self.label_text = new_label;
         self
     }
 
-    // Specify line color for knob outside
+    /// Specify line color for knob outside
     pub fn set_line_color(mut self, new_color: Color32) -> Self {
         self.line_color = new_color;
         self
     }
 
-    // Specify fill color for knob
+    /// Specify fill color for knob
     pub fn set_knob_color(mut self, new_color: Color32) -> Self {
         self.knob_color = new_color;
         self
     }
 
-    // Specify fill color for background
+    /// Specify fill color for background
     pub fn set_background_color(mut self, new_color: Color32) -> Self {
         self.background_color = new_color;
         self
     }
 
-    // Specify center knob size
+    /// Specify center knob size
     pub fn set_center_size(mut self, size: f32) -> Self {
         self.center_size = size;
         self
     }
 
-    // Specify line width
+    /// Specify line width
     pub fn set_line_width(mut self, width: f32) -> Self {
         self.line_width = width;
         self
     }
 
-    // Specify distance between center and arc
+    /// Specify distance between center and arc
     pub fn set_center_to_line_space(mut self, new_width: f32) -> Self {
         self.center_to_line_space = new_width;
         self
     }
 
-    // Set text size for label
+    /// Set text size for label and value
     pub fn set_text_size(mut self, text_size: f32) -> Self {
         self.text_size = text_size;
         self
     }
 
-    // Set knob padding
+    /// Set knob padding
     pub fn set_padding(mut self, padding: f32) -> Self {
         self.padding = padding;
         self
     }
 
-    // Set center value of knob visibility
+    /// Set center value of knob visibility
     pub fn set_show_center_value(mut self, new_bool: bool) -> Self {
         self.show_center_value = new_bool;
         self
     }
 
-    // Set center value of knob visibility
+    /// Set center value of knob visibility
     pub fn set_show_label(mut self, new_bool: bool) -> Self {
         self.show_label = new_bool;
         self
     }
 
-    // Set radius of backround rounding
+    /// Set radius of backround rounding
     pub fn set_background_radius(mut self, new_radius: f32) -> Self {
         self.background_radius = new_radius;
         self
     }
 
-    // Set opacity of backround fill
+    /// Set opacity of backround fill
     pub fn set_background_opacity(mut self, new_opacity: f32) -> Self {
         self.background_opacity = new_opacity;
         self
     }
 
-    pub fn preset_style(mut self, style_id: KnobStyle) -> Self {
+    fn preset_style(mut self, style_id: KnobStyle) -> Self {
         // These are all calculated off radius to scale better
         match style_id {
             KnobStyle::Preset1 => {

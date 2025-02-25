@@ -1,6 +1,6 @@
 [package]
 name = "egui-utils"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 authors = ["Garneek"]
@@ -16,6 +16,7 @@ lazy_static = "1.4.0"
 
 [lib]
 path = "src/lib.rs"
+doctest = false
 
 [profile.dev]
 opt-level = 3
