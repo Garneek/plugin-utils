@@ -7,6 +7,9 @@ authors = ["Garneek"]
 description = "Utility functions for nih_plug"
 license = "GNU General Public License v3.0"
 
+[features]
+test = ["dsp-utils/test"]
+
 [dependencies]
 dsp-utils = {path = "dsp-utils"}
 egui-utils = {path = "egui-utils"}
