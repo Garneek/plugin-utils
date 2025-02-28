@@ -1,6 +1,6 @@
 [package]
 name = "dsp-utils"
-version = "0.1.1"
+version = "0.2.1"
 edition = "2021"
 
 authors = ["Garneek"]
@@ -17,8 +17,6 @@ nih_plug = { git = "https://github.com/ardura/nih-plug.git", rev = "de315f902d7b
 
 plotters = { version = "0.3.7", optional = true }
 creek = { version = "1.1.2", features = ["decode-mp3"], optional = true }
-
-
 
 [lib]
 path = "src/lib.rs"
