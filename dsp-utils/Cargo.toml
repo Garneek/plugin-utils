@@ -8,7 +8,7 @@ description = "DSP utility functions for nih_plug"
 license = "GNU General Public License v3.0"
 
 [features]
-default = ["test"]
+default = []
 test = ["dep:plotters", "dep:creek"]
 
 
