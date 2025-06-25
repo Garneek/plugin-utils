@@ -467,7 +467,7 @@ mod tests {
             block: &[f32],
             output: &mut [f32],
             _params_block: &Self::ParamsBlock,
-        ) -> nih_plug::prelude::ProcessStatus {
+        ) -> nih_plug::plugin::ProcessStatus {
             assert_eq!(self.block_size, block.len());
             assert_eq!(self.block_size, output.len());
 
