@@ -15,7 +15,7 @@ use nih_plug::prelude::{Param, ParamSetter};
 use nih_plug_egui::egui::{
     self,
     epaint::{CircleShape, PathShape, PathStroke},
-    pos2, Align2, Color32, FontId, Pos2, Rect, Response, Rgba, Rounding, Sense, Shape, Stroke, Ui,
+    pos2, Align2, Color32, FontId, Pos2, Rect, Response, Rgba, CornerRadius, Sense, Shape, Stroke, Ui,
     Vec2, Widget,
 };
 
@@ -624,7 +624,7 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
             // Background Rect
             ui.painter().rect_filled(
                 response.rect,
-                Rounding::from(self.background_radius),
+                CornerRadius::from(self.background_radius),
                 self.background_color
                     .linear_multiply(self.background_opacity),
             );
@@ -641,7 +641,7 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
                         1.0,
                         0.03,
                     ),
-                    closed: false,
+                    closed: true,
                     fill: self.knob_color.linear_multiply(0.7),
                     stroke: outline_stroke.into(),
                 });
@@ -1030,7 +1030,7 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
                     );
                     ui.painter().rect_filled(
                         readability_box,
-                        Rounding::from(16.0),
+                        CornerRadius::from(16.0),
                         self.background_color,
                     );
                 }
