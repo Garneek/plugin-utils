@@ -106,6 +106,15 @@ use nih_plug::buffer::Buffer;
 use nih_plug::params::Params;
 use nih_plug::prelude::ProcessStatus;
 
+#[cfg(feature = "test")]
+mod plotter;
+
+#[cfg(feature = "test")]
+pub use plotter::*;
+
+mod misc;
+pub use misc::*;
+
 mod mdct;
 pub use mdct::MDCT;
 
@@ -372,7 +381,9 @@ impl<SCP: SingleChannelProcessor> DspCoreProcessor<SCP> {
                 slice[channel][0..index]
                     .copy_from_slice(&self.buffer[channel][self.overflow..self.block_size]);
 
+                #[cfg(not(feature = "test"))]
                 self.params_block.from_params();
+
                 match self.channel_processor[channel].process(
                     &self.temp,
                     &mut self.buffer[channel],
@@ -393,7 +404,9 @@ impl<SCP: SingleChannelProcessor> DspCoreProcessor<SCP> {
                 slice[channel][index..index + self.block_size]
                     .copy_from_slice(&self.buffer[channel][0..self.block_size]);
 
+                #[cfg(not(feature = "test"))]
                 self.params_block.from_params();
+
                 match self.channel_processor[channel].process(
                     &self.temp,
                     &mut self.buffer[channel],
