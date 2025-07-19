@@ -15,7 +15,7 @@ use nih_plug::prelude::{Param, ParamSetter};
 use nih_plug_egui::egui::{
     self,
     epaint::{CircleShape, PathShape, PathStroke},
-    pos2, Align2, Color32, FontId, Pos2, Rect, Response, Rgba, CornerRadius, Sense, Shape, Stroke, Ui,
+    pos2, Align2, Color32, FontId, Pos2, Rect, Response, Rgba, Rounding, Sense, Shape, Stroke, Ui,
     Vec2, Widget,
 };
 
@@ -306,18 +306,15 @@ pub enum KnobLayout {
     Vertical,
     /// Label and value data will be put on the right of the knob, with both texts stacked on top of each other
     Horizonal,
-    /// Label and value data will be put on the right of the knob, both values will form one line of text
-    HorizontalInline,
     /// Small knob with no label or value data
     SquareNoLabel,
-    Default,
 }
 
 macro_rules! apply_preset_to_variable {
-    ($self: ident, $preset: ident, $var: ident) => {
-        match $preset.$var {
-            Some(v) => $self.$var = v,
-            None => {}
+    ($var: expr, $default: expr) => {
+        match $var {
+            Some(v) => v,
+            None => $default,
         }
     };
 }
@@ -325,98 +322,46 @@ macro_rules! apply_preset_to_variable {
 #[allow(dead_code)]
 impl<'a, P: Param> ArcKnob<'a, P> {
     /// Create a new knob for a specific param
-    ///
-    /// If you plan on later using [`ArcKnob::apply_preset`] you can set `radius` and `layout` to some temporary value,
-    /// as most likely you want to read those from [`KnobPreset`] anyway
-    pub fn for_param(
-        param: &'a P,
-        param_setter: &'a ParamSetter,
-        radius: f32,
-        layout: KnobLayout,
-    ) -> Self {
-        ArcKnob {
+    pub fn for_param(param: &'a P, param_setter: &'a ParamSetter, preset: &KnobPreset) -> Self {
+        let mut temp = ArcKnob {
             slider_region: SliderRegion::new(param, param_setter),
-            radius,
-            line_color: Color32::BLACK,
-            knob_color: Color32::BLACK,
-            background_color: Color32::BLACK,
+            radius: preset.radius.unwrap_or(16_f32),
+            line_color: preset.line_color.unwrap_or(Color32::BLACK),
+            knob_color: preset.knob_color.unwrap_or(Color32::BLACK),
+            background_color: preset.background_color.unwrap_or(Color32::BLACK),
             center_size: 20.0,
             line_width: 2.0,
             center_to_line_space: 0.0,
-            hover_text: false,
+            hover_text: apply_preset_to_variable!(preset.hover_text, false),
             hover_text_content: String::new(),
-            text_size: 16.0,
+            text_size: apply_preset_to_variable!(preset.text_size, 16_f32),
             label_text: String::new(),
-            show_center_value: true,
-            outline: false,
-            padding: 10.0,
-            show_label: true,
-            swap_label_and_value: true,
-            text_color_override: Color32::PLACEHOLDER,
-            readable_box: false,
-            background_radius: 4_f32,
-            background_opacity: 0.6_f32,
-            layout,
-            arc_start: match layout {
-                KnobLayout::Default => 0.75,
-                KnobLayout::SquareNoLabel => 0.625,
-                KnobLayout::Vertical => 0.625,
-                KnobLayout::Horizonal => 0.625,
-                KnobLayout::HorizontalInline => 0.625,
-            },
-            arc_end: match layout {
-                KnobLayout::Default => -1.0,
-                KnobLayout::SquareNoLabel => -0.75,
-                KnobLayout::Vertical => -0.75,
-                KnobLayout::Horizonal => -0.75,
-                KnobLayout::HorizontalInline => -0.75,
-            },
-        }
-    }
+            show_center_value: apply_preset_to_variable!(preset.show_center_value, true),
+            outline: apply_preset_to_variable!(preset.outline, false),
+            padding: 10.0_f32,
+            show_label: apply_preset_to_variable!(preset.show_label, true),
+            swap_label_and_value: apply_preset_to_variable!(preset.swap_label_and_value, true),
+            text_color_override: apply_preset_to_variable!(
+                preset.text_color_override,
+                Color32::PLACEHOLDER
+            ),
+            readable_box: apply_preset_to_variable!(preset.readable_box, false),
+            background_radius: apply_preset_to_variable!(preset.background_radius, 4_f32),
+            background_opacity: apply_preset_to_variable!(preset.background_opacity, 0.6_f32),
+            layout: apply_preset_to_variable!(preset.layout, KnobLayout::Vertical),
+            arc_start: apply_preset_to_variable!(preset.arc_start, 0.625_f32),
+            arc_end: apply_preset_to_variable!(preset.arc_end, -0.75_f32),
+        };
 
-    /// Applies a given preset.
-    ///
-    /// If a value of some field is `None`, the value will be left unchanged (if the knob is freshly initialized, it will be default)
-    pub fn apply_preset(mut self, preset: &KnobPreset) -> Self {
-        apply_preset_to_variable!(self, preset, layout);
-        apply_preset_to_variable!(self, preset, radius);
-        apply_preset_to_variable!(self, preset, line_color);
-        apply_preset_to_variable!(self, preset, knob_color);
-        apply_preset_to_variable!(self, preset, hover_text);
-        apply_preset_to_variable!(self, preset, show_center_value);
-        apply_preset_to_variable!(self, preset, text_size);
-        apply_preset_to_variable!(self, preset, outline);
-        apply_preset_to_variable!(self, preset, show_label);
-        apply_preset_to_variable!(self, preset, swap_label_and_value);
-        apply_preset_to_variable!(self, preset, text_color_override);
-        apply_preset_to_variable!(self, preset, readable_box);
-        apply_preset_to_variable!(self, preset, background_radius);
-        apply_preset_to_variable!(self, preset, background_opacity);
-        apply_preset_to_variable!(self, preset, background_color);
+        temp.padding = preset.padding.unwrap_or(temp.radius * 0.125_f32);
 
-        self.padding = preset.padding.unwrap_or(self.radius * 0.125_f32);
-        self.center_to_line_space = preset
+        temp.center_to_line_space = preset
             .center_to_line_space
-            .unwrap_or(self.radius * 0.012_f32);
-        self.line_width = preset.line_width.unwrap_or(self.radius * 0.1_f32);
-        self.center_size = preset.center_size.unwrap_or(self.radius * 0.7_f32);
+            .unwrap_or(temp.radius * 0.012_f32);
+        temp.line_width = preset.line_width.unwrap_or(temp.radius * 0.1_f32);
+        temp.center_size = preset.center_size.unwrap_or(temp.radius * 0.7_f32);
 
-        self.arc_start = preset.arc_start.unwrap_or(match self.layout {
-            KnobLayout::Default => 0.75,
-            KnobLayout::SquareNoLabel => 0.625,
-            KnobLayout::Vertical => 0.625,
-            KnobLayout::Horizonal => 0.625,
-            KnobLayout::HorizontalInline => 0.625,
-        });
-        self.arc_end = preset.arc_end.unwrap_or(match self.layout {
-            KnobLayout::Default => -1.0,
-            KnobLayout::SquareNoLabel => -0.75,
-            KnobLayout::Vertical => -0.75,
-            KnobLayout::Horizonal => -0.75,
-            KnobLayout::HorizontalInline => -0.75,
-        });
-
-        self
+        temp
     }
 
     /// Sets the layout of the plugin
@@ -426,9 +371,6 @@ impl<'a, P: Param> ArcKnob<'a, P> {
         self.layout = layout;
         match layout {
             KnobLayout::SquareNoLabel => {
-                self.show_label = false;
-            }
-            KnobLayout::Default => {
                 self.show_label = false;
             }
             _ => {}
@@ -589,15 +531,7 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
                 self.padding + self.radius * 2.0,
                 self.padding + self.radius * 3.0,
             ),
-            KnobLayout::HorizontalInline => egui::vec2(
-                self.padding + self.radius * 9.0,
-                self.padding + self.radius * 2.0,
-            ),
             KnobLayout::SquareNoLabel => egui::vec2(
-                self.padding + self.radius * 2.0,
-                self.padding + self.radius * 2.0,
-            ),
-            KnobLayout::Default => egui::vec2(
                 self.padding + self.radius * 2.0,
                 self.padding + self.radius * 2.0,
             ),
@@ -609,13 +543,9 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
         ui.vertical(|ui| {
             let painter = ui.painter_at(response.rect);
             let center = match self.layout {
-                KnobLayout::Default | KnobLayout::SquareNoLabel => response.rect.center(),
+                KnobLayout::SquareNoLabel => response.rect.center(),
                 KnobLayout::Vertical => response.rect.center(),
                 KnobLayout::Horizonal => Pos2 {
-                    x: response.rect.left_center().x + self.radius,
-                    y: response.rect.left_center().y,
-                },
-                KnobLayout::HorizontalInline => Pos2 {
                     x: response.rect.left_center().x + self.radius,
                     y: response.rect.left_center().y,
                 },
@@ -624,7 +554,7 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
             // Background Rect
             ui.painter().rect_filled(
                 response.rect,
-                CornerRadius::from(self.background_radius),
+                Rounding::from(self.background_radius),
                 self.background_color
                     .linear_multiply(self.background_opacity),
             );
@@ -641,7 +571,7 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
                         1.0,
                         0.03,
                     ),
-                    closed: true,
+                    closed: false,
                     fill: self.knob_color.linear_multiply(0.7),
                     stroke: outline_stroke.into(),
                 });
@@ -967,25 +897,6 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
                         value_pos = response.rect.center();
                         label_pos = response.rect.center();
                     }
-                    KnobLayout::Default => {
-                        if self.swap_label_and_value {
-                            // Newer rearranged positions to put value at bottom of knob
-                            value_pos = Pos2::new(
-                                response.rect.center_bottom().x,
-                                response.rect.center_bottom().y - label_y,
-                            );
-                            label_pos =
-                                Pos2::new(response.rect.center().x, response.rect.center().y);
-                        } else {
-                            // The old value and label positions
-                            label_pos = Pos2::new(
-                                response.rect.center_bottom().x,
-                                response.rect.center_bottom().y - label_y,
-                            );
-                            value_pos =
-                                Pos2::new(response.rect.center().x, response.rect.center().y);
-                        }
-                    }
                     // GUI Rewrite for Actuate made these
                     KnobLayout::Vertical => {
                         label_pos = Pos2::new(
@@ -1007,16 +918,6 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
                             response.rect.right_center().y + label_y,
                         );
                     }
-                    KnobLayout::HorizontalInline => {
-                        label_pos = Pos2::new(
-                            response.rect.center().x + self.radius / 1.5,
-                            response.rect.right_center().y,
-                        );
-                        value_pos = Pos2::new(
-                            response.rect.center().x + self.radius / 1.5,
-                            response.rect.right_center().y,
-                        );
-                    }
                 }
 
                 if self.readable_box {
@@ -1030,7 +931,7 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
                     );
                     ui.painter().rect_filled(
                         readability_box,
-                        CornerRadius::from(16.0),
+                        Rounding::from(16.0),
                         self.background_color,
                     );
                 }
@@ -1044,101 +945,63 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
                 }
 
                 if self.label_text.is_empty() {
-                    if self.layout == KnobLayout::HorizontalInline {
-                        painter.text(
-                            label_pos,
-                            Align2::CENTER_CENTER,
-                            self.slider_region.param.name().to_owned()
-                                + ": "
-                                + &self.slider_region.get_string(),
-                            FontId::proportional(self.text_size),
-                            Color32::BLACK.linear_multiply(0.2),
-                        );
-                        painter.text(
-                            label_pos,
-                            Align2::CENTER_CENTER,
-                            self.slider_region.param.name().to_owned()
-                                + ": "
-                                + &self.slider_region.get_string(),
-                            FontId::proportional(self.text_size),
-                            text_color.linear_multiply(0.4),
-                        );
-                    } else {
-                        painter.text(
-                            value_pos,
-                            Align2::CENTER_CENTER,
-                            self.slider_region.get_string(),
-                            FontId::proportional(self.text_size),
-                            Color32::WHITE.linear_multiply(0.1),
-                        );
-                        painter.text(
-                            value_pos,
-                            Align2::CENTER_CENTER,
-                            self.slider_region.get_string(),
-                            FontId::proportional(self.text_size),
-                            text_color,
-                        );
-                        painter.text(
-                            label_pos,
-                            Align2::CENTER_CENTER,
-                            self.slider_region.param.name(),
-                            FontId::proportional(self.text_size),
-                            Color32::BLACK.linear_multiply(0.2),
-                        );
-                        painter.text(
-                            label_pos,
-                            Align2::CENTER_CENTER,
-                            self.slider_region.param.name(),
-                            FontId::proportional(self.text_size),
-                            text_color.linear_multiply(0.4),
-                        );
-                    }
+                    painter.text(
+                        value_pos,
+                        Align2::CENTER_CENTER,
+                        self.slider_region.get_string(),
+                        FontId::proportional(self.text_size),
+                        Color32::WHITE.linear_multiply(0.1),
+                    );
+                    painter.text(
+                        value_pos,
+                        Align2::CENTER_CENTER,
+                        self.slider_region.get_string(),
+                        FontId::proportional(self.text_size),
+                        text_color,
+                    );
+                    painter.text(
+                        label_pos,
+                        Align2::CENTER_CENTER,
+                        self.slider_region.param.name(),
+                        FontId::proportional(self.text_size),
+                        Color32::BLACK.linear_multiply(0.2),
+                    );
+                    painter.text(
+                        label_pos,
+                        Align2::CENTER_CENTER,
+                        self.slider_region.param.name(),
+                        FontId::proportional(self.text_size),
+                        text_color.linear_multiply(0.4),
+                    );
                 } else {
-                    if self.layout == KnobLayout::HorizontalInline {
-                        painter.text(
-                            label_pos,
-                            Align2::CENTER_CENTER,
-                            self.label_text.to_string() + ": " + &self.slider_region.param.name(),
-                            FontId::proportional(self.text_size),
-                            Color32::BLACK.linear_multiply(0.2),
-                        );
-                        painter.text(
-                            label_pos,
-                            Align2::CENTER_CENTER,
-                            self.label_text.to_string() + ": " + &self.slider_region.param.name(),
-                            FontId::proportional(self.text_size),
-                            text_color.linear_multiply(0.4),
-                        );
-                    } else {
-                        painter.text(
-                            value_pos,
-                            Align2::CENTER_CENTER,
-                            self.label_text.to_string(),
-                            FontId::proportional(self.text_size),
-                            Color32::WHITE.linear_multiply(0.1),
-                        );
-                        painter.text(
-                            value_pos,
-                            Align2::CENTER_CENTER,
-                            self.label_text,
-                            FontId::proportional(self.text_size),
-                            text_color,
-                        );
-                        painter.text(
-                            label_pos,
-                            Align2::CENTER_CENTER,
-                            self.slider_region.param.name(),
-                            FontId::proportional(self.text_size),
-                            Color32::BLACK.linear_multiply(0.2),
-                        );
-                        painter.text(
-                            label_pos,
-                            Align2::CENTER_CENTER,
-                            self.slider_region.param.name(),
-                            FontId::proportional(self.text_size),
-                            text_color.linear_multiply(0.4),
-                        );
-                    }
+                    painter.text(
+                        value_pos,
+                        Align2::CENTER_CENTER,
+                        self.label_text.to_string(),
+                        FontId::proportional(self.text_size),
+                        Color32::WHITE.linear_multiply(0.1),
+                    );
+                    painter.text(
+                        value_pos,
+                        Align2::CENTER_CENTER,
+                        self.label_text,
+                        FontId::proportional(self.text_size),
+                        text_color,
+                    );
+                    painter.text(
+                        label_pos,
+                        Align2::CENTER_CENTER,
+                        self.slider_region.param.name(),
+                        FontId::proportional(self.text_size),
+                        Color32::BLACK.linear_multiply(0.2),
+                    );
+                    painter.text(
+                        label_pos,
+                        Align2::CENTER_CENTER,
+                        self.slider_region.param.name(),
+                        FontId::proportional(self.text_size),
+                        text_color.linear_multiply(0.4),
+                    );
                 }
             }
         });
