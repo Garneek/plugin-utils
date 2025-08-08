@@ -1,18 +1,18 @@
 use nih_plug::params::Param;
 use nih_plug::prelude::ParamSetter;
 
-use nih_plug_egui::egui::epaint::PathShape;
 use nih_plug_egui::egui::Color32;
 use nih_plug_egui::egui::Id;
 use nih_plug_egui::egui::Rect;
 use nih_plug_egui::egui::Response;
 use nih_plug_egui::egui::Rounding;
 use nih_plug_egui::egui::Sense;
-use nih_plug_egui::egui::Shape;
 use nih_plug_egui::egui::Stroke;
 use nih_plug_egui::egui::Ui;
 use nih_plug_egui::egui::Vec2;
 use nih_plug_egui::egui::Widget;
+
+use super::WidgetStyle;
 
 const PADDING: f32 = 6_f32;
 const COLOR_ANIMATION_TIME: f32 = 0.045_f32;
@@ -36,6 +36,7 @@ impl<'a, P: Param> ParamHandler<'a, P> {
             self.param_setter
                 .set_parameter(self.param, self.param.default_plain_value());
         } else if response.clicked() {
+            self.param_setter.begin_set_parameter(self.param);
             self.param_setter.set_parameter_normalized(
                 self.param,
                 if self.param.modulated_normalized_value() == 1.0 {
@@ -44,6 +45,7 @@ impl<'a, P: Param> ParamHandler<'a, P> {
                     1.0
                 },
             );
+            self.param_setter.end_set_parameter(self.param);
         }
 
         self.param.modulated_normalized_value() == 1.0
@@ -61,47 +63,6 @@ pub enum CheckboxLayout {
     VerticalSwitch,
     /// Horizontal switch with animated switching
     HorizontalSwitch,
-}
-
-/// `ParamCheckbox` preset. Set it as constant, if a value is set as `None` default value is used
-pub struct ParamCheckboxPreset {
-    /// Layout, default: `CheckboxLayout::Square`
-    pub layout: Option<CheckboxLayout>,
-    /// Checkbox size. For `Square` and `Rect` it is the width of the widget. For the `HorizontalSwitch`
-    /// and `VerticalSwitch` it is the shorter side. Default: `16_f32`
-    pub size: Option<f32>,
-    /// Width of the outline of the widget. Default: `size * 0.075`
-    pub line_width: Option<f32>,
-    /// Outline color. Default: `BLACK`
-    pub line_color: Option<Color32>,
-    /// Color of the handle in `HorizontalSwitch` and `VerticalSwitch` on the off position.
-    /// Default: `PLACEHOLDER`
-    pub off_color: Option<Color32>,
-    /// Color of the handle in the on position. Default: `LIGHT_BLUE`
-    pub on_color: Option<Color32>,
-    /// Background color. Default: `LIGHT_GRAY`
-    pub background_color: Option<Color32>,
-    /// Color applied on hover with low opacity. Default: `WHITE`
-    pub highlight_color: Option<Color32>,
-    /// Wheter to show a hover text or not, you need to set the hover text with
-    /// `ParamCheckbox::set_hover_text`. Default: `false`
-    pub show_hover_text: Option<bool>,
-}
-
-impl Default for ParamCheckboxPreset {
-    fn default() -> Self {
-        Self {
-            layout: None,
-            size: None,
-            line_width: None,
-            line_color: None,
-            off_color: None,
-            on_color: None,
-            background_color: None,
-            highlight_color: None,
-            show_hover_text: None,
-        }
-    }
 }
 
 /// Checkbox for a boolean parameter, or other param that takes either `1_f32` or `0_f32`
@@ -125,23 +86,22 @@ impl<'a, P: Param> ParamCheckbox<'a, P> {
     pub fn for_param(
         param: &'a P,
         param_setter: &'a ParamSetter,
-        preset: &ParamCheckboxPreset,
+        style: &WidgetStyle,
+        layout: CheckboxLayout,
     ) -> Self {
-        let mut temp = Self {
+        Self {
             param_handler: ParamHandler::new(param, param_setter),
             hover_text: String::new(),
-            layout: preset.layout.unwrap_or(CheckboxLayout::Square),
-            size: preset.size.unwrap_or(16_f32),
-            line_width: 1_f32,
-            line_color: preset.line_color.unwrap_or(Color32::BLACK),
-            off_color: preset.off_color.unwrap_or(Color32::PLACEHOLDER),
-            on_color: preset.on_color.unwrap_or(Color32::LIGHT_BLUE),
-            background_color: preset.background_color.unwrap_or(Color32::LIGHT_GRAY),
-            highlight_color: preset.highlight_color.unwrap_or(Color32::WHITE),
-            show_hover_text: preset.show_hover_text.unwrap_or(false),
-        };
-        temp.line_width = preset.line_width.unwrap_or(temp.size * 0.075_f32);
-        temp
+            layout,
+            size: style.element_size,
+            line_width: style.line_width,
+            line_color: style.line_color,
+            off_color: style.element_main_color,
+            on_color: style.element_accent_color,
+            background_color: style.background_color,
+            highlight_color: style.highlight_color,
+            show_hover_text: style.show_hover_text,
+        }
     }
 
     /// Set content of hover text
@@ -159,7 +119,7 @@ impl<'a, P: Param> ParamCheckbox<'a, P> {
             self.background_color,
         );
 
-        let mut rect = response.rect.shrink(PADDING * 1.1_f32 + self.line_width);
+        let mut rect = response.rect.shrink(PADDING * 1.5_f32 + self.line_width);
         let id = Id::new((rect.center().x * 10000_f32 + rect.center().y) as i64);
 
         // Modify the rect based on the layout

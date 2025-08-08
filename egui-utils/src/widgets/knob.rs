@@ -156,76 +156,10 @@ impl<'a, P: Param> SliderRegion<'a, P> {
 ///
 /// If some value is set as `None`, then it will be left unchanged(default in most cases)
 pub struct KnobPreset {
-    /// Radius of the knob
-    ///
-    /// Needs to be assigned either in from_param or here
-    pub radius: Option<f32>,
-    /// Color of the accents of the knob
-    ///
-    /// Default: `Black`
-    pub line_color: Option<Color32>,
-    /// Default: `radius * 0.7`
-    pub center_size: Option<f32>,
-    /// Width of lines in the knob
-    ///
-    /// Default: `radius * 0.1`
-    pub line_width: Option<f32>,
-    /// Color of the knob
-    ///
-    /// Default: `Black`
-    pub knob_color: Option<Color32>,
     /// Default: `radius * 0.012`
     pub center_to_line_space: Option<f32>,
-    /// Whether there should be a tooltip on hover
-    ///
-    /// Default: `false`
-    pub hover_text: Option<bool>,
     /// Default: `true`
     pub show_center_value: Option<bool>,
-    /// Font size
-    ///
-    /// Default: `16.0`
-    pub text_size: Option<f32>,
-    /// Should the outline be drawn
-    ///
-    /// Default: `false`
-    pub outline: Option<bool>,
-    /// Padding around the knob
-    ///
-    /// Default: `radius * 0.125`
-    pub padding: Option<f32>,
-    /// Should the label be shown
-    ///
-    /// Default: `true`, `false` for [`KnobLayout`] `Default` and `SquareNoLabel`
-    pub show_label: Option<bool>,
-    /// If the label and value positions should be swapped
-    ///
-    /// Default: `false`
-    pub swap_label_and_value: Option<bool>,
-    /// Override of the text color, by default the text color is the same as `line_color`
-    ///
-    /// Default: `Color32::Placeholder`
-    pub text_color_override: Option<Color32>,
-    /// Set readability box visibility for text on other colors. Broken. The box is misaligned
-    ///
-    /// Default: `false`
-    pub readable_box: Option<bool>,
-    /// Radius of corner rounding for background fill
-    ///
-    /// Default: `4.0`
-    pub background_radius: Option<f32>,
-    /// Opacity of background fill
-    ///
-    /// Default: `0.6`
-    pub background_opacity: Option<f32>,
-    /// Color of the background fill. Does not support alpha data
-    ///
-    /// Default: `Black`
-    pub background_color: Option<Color32>,
-    /// Plugin layout, look [`KnobLayout`]
-    ///
-    /// Needs to be assigned either in from_param or here
-    pub layout: Option<KnobLayout>,
     /// Start angle of the arc.
     ///
     /// Default: `0.625`, except for [`KnobLayout::Default`]: `0.75`

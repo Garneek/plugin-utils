@@ -8,4 +8,6 @@ pub use widgets::CheckboxLayout;
 pub use widgets::KnobLayout;
 pub use widgets::KnobPreset;
 pub use widgets::ParamCheckbox;
-pub use widgets::ParamCheckboxPreset;
+
+pub use widgets::ferra_color;
+pub use widgets::WidgetStyle;
