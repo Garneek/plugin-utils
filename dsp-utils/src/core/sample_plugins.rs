@@ -38,7 +38,7 @@ impl Default for GainParams {
 
 pub(crate) struct GainParamsBlock {
     pub(crate) gain: Vec<f32>,
-    pub(crate) block_size: usize,
+    pub(crate) _block_size: usize,
 }
 
 impl ParamsBlock for GainParamsBlock {
@@ -46,7 +46,7 @@ impl ParamsBlock for GainParamsBlock {
     fn new(_params: Arc<Self::Params>, block_size: usize) -> Self {
         Self {
             gain: vec![0_f32; block_size],
-            block_size,
+            _block_size: block_size,
         }
     }
 
@@ -121,7 +121,7 @@ impl Default for ClipParams {
 pub(crate) struct ClipParamsBlock {
     pub(crate) drive: Vec<f32>,
     pub(crate) gain: Vec<f32>,
-    pub(crate) block_size: usize,
+    pub(crate) _block_size: usize,
 }
 
 impl ParamsBlock for ClipParamsBlock {
@@ -130,7 +130,7 @@ impl ParamsBlock for ClipParamsBlock {
         Self {
             drive: vec![0_f32; block_size],
             gain: vec![0_f32; block_size],
-            block_size,
+            _block_size: block_size,
         }
     }
 

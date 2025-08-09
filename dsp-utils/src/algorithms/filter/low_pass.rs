@@ -1,5 +1,3 @@
-use nih_plug::nih_log;
-
 use crate::algorithms::Filter;
 
 pub struct LowPassFilter {

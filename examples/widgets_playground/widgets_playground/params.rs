@@ -33,7 +33,7 @@ impl Default for EguiUtilsExampleParams {
             )
             .with_smoother(SmoothingStyle::Linear(50_f32))
             .with_unit(" %")
-            .with_value_to_string(formatters::v2s_f32_percentage(2))
+            .with_value_to_string(formatters::v2s_f32_percentage(1))
             .with_string_to_value(formatters::s2v_f32_percentage()),
 
             db: FloatParam::new(
