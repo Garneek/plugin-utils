@@ -5,7 +5,7 @@ extern crate egui_utils;
 
 use egui_utils::*;
 use nih_plug::prelude::ParamSetter;
-use nih_plug_egui::egui::Rounding;
+use nih_plug_egui::egui::CornerRadius;
 use nih_plug_egui::egui::Shadow;
 use nih_plug_egui::egui::Ui;
 
@@ -139,7 +139,7 @@ pub(crate) fn create(
     let frame = egui::Frame {
         inner_margin: 16_f32.into(),
         outer_margin: 0_f32.into(),
-        rounding: Rounding::ZERO,
+        corner_radius: CornerRadius::ZERO,
         shadow: Shadow::NONE,
         // fill: Color32::WHITE,
         fill: ferra_color::FERRA_NIGHT,
@@ -153,7 +153,9 @@ pub(crate) fn create(
             let mut fonts = egui::FontDefinitions::default();
             fonts.font_data.insert(
                 "futura".to_string(),
-                egui::FontData::from_static(include_bytes!("../resources/FuturaCondensed.ttf")),
+                Arc::new(egui::FontData::from_static(include_bytes!(
+                    "../resources/FuturaCondensed.ttf"
+                ))),
             );
             fonts
                 .families
