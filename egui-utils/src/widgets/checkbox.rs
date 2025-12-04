@@ -12,6 +12,8 @@ use nih_plug_egui::egui::Ui;
 use nih_plug_egui::egui::Vec2;
 use nih_plug_egui::egui::Widget;
 
+// Add some icon support
+
 use super::WidgetStyle;
 
 const PADDING: f32 = 6_f32;

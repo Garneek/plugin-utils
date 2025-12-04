@@ -3,23 +3,26 @@ use super::Process;
 use super::SignalWindow;
 use super::WindowedProcess;
 
+// WIP
+
 pub type PitchShift = WindowedProcess<PitchShiftProcess, HannWindow>;
 
 pub struct PitchShiftProcess {
     temp: Vec<f32>,
-    windowed: Vec<f32>,
+    _windowed: Vec<f32>,
     window: HannWindow,
 }
 
 impl Process for PitchShiftProcess {
     type Message = ();
     type Data = f32;
-    fn new(block_size: usize) -> Self {
-        Self {
-            temp: vec![0_f32; block_size * 2],
-            windowed: vec![0_f32; block_size * 2],
-            window: HannWindow::new(block_size),
-        }
+    fn new(_block_size: usize) -> Self {
+        unimplemented!();
+        // Self {
+        //     temp: vec![0_f32; block_size * 2],
+        //     windowed: vec![0_f32; block_size * 2],
+        //     window: HannWindow::new(block_size),
+        // }
     }
     fn process(&mut self, block: &mut [f32], data: &Self::Data) -> Self::Message {
         self.temp.copy_from_slice(block);
@@ -36,9 +39,7 @@ impl Process for PitchShiftProcess {
             tar_idx += 1;
         }
 
-        if src_idx < half_len {
-            
-        }
+        if src_idx < half_len {}
 
         // self.unwindowed.copy_from_slice(&block[0..half_len]);
 
