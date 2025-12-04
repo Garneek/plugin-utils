@@ -11,12 +11,12 @@ use nih_plug::prelude::ParamSetter;
 use nih_plug_egui::egui;
 use nih_plug_egui::egui::epaint::Vec2;
 use nih_plug_egui::egui::Align2;
+use nih_plug_egui::egui::CornerRadius;
 use nih_plug_egui::egui::FontId;
 use nih_plug_egui::egui::Painter;
 use nih_plug_egui::egui::Pos2;
 use nih_plug_egui::egui::Rect;
 use nih_plug_egui::egui::Response;
-use nih_plug_egui::egui::Rounding;
 use nih_plug_egui::egui::Sense;
 use nih_plug_egui::egui::Shape;
 use nih_plug_egui::egui::Stroke;
@@ -69,7 +69,7 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
         let painter = ui.painter_at(rect);
         ui.painter().rect_filled(
             rect,
-            Rounding::same(self.style.background_radius),
+            CornerRadius::same(self.style.background_radius),
             self.style
                 .background_color
                 .gamma_multiply(self.style.background_opacity),
@@ -78,8 +78,9 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
         if self.style.outline {
             ui.painter().rect_stroke(
                 rect,
-                Rounding::same(self.style.background_radius),
+                CornerRadius::same(self.style.background_radius),
                 Stroke::new(2_f32, self.style.line_color),
+                egui::StrokeKind::Middle,
             );
         }
 
@@ -96,7 +97,7 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
 
             painter.rect_filled(
                 rect.shrink(self.style.text_size / 8_f32),
-                Rounding::same(self.style.background_radius),
+                CornerRadius::same(self.style.background_radius),
                 self.style.highlight_color.gamma_multiply(0.075),
             );
 

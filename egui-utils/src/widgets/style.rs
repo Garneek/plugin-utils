@@ -45,7 +45,7 @@ pub struct WidgetStyle {
     pub padding: f32,
     pub show_label: bool,
     pub show_value: bool,
-    pub background_radius: f32,
+    pub background_radius: u8,
     pub background_opacity: f32,
     pub background_color: Color32,
     pub highlight_color: Color32,
@@ -68,7 +68,7 @@ impl WidgetStyle {
             padding: 1_f32,
             show_label: true,
             show_value: true,
-            background_radius: 8_f32,
+            background_radius: 8,
             background_opacity: 0.95_f32,
             background_color: FERRA_ASH,
             highlight_color: FERRA_MIST,
@@ -149,7 +149,7 @@ impl WidgetStyle {
         self
     }
 
-    pub const fn set_background_radius(mut self, n: f32) -> Self {
+    pub const fn set_background_radius(mut self, n: u8) -> Self {
         self.background_radius = n;
         self
     }

@@ -2,10 +2,10 @@ use nih_plug::params::Param;
 use nih_plug::prelude::ParamSetter;
 
 use nih_plug_egui::egui::Color32;
+use nih_plug_egui::egui::CornerRadius;
 use nih_plug_egui::egui::Id;
 use nih_plug_egui::egui::Rect;
 use nih_plug_egui::egui::Response;
-use nih_plug_egui::egui::Rounding;
 use nih_plug_egui::egui::Sense;
 use nih_plug_egui::egui::Stroke;
 use nih_plug_egui::egui::Ui;
@@ -115,7 +115,7 @@ impl<'a, P: Param> ParamCheckbox<'a, P> {
         // background
         ui.painter().rect_filled(
             response.rect.shrink(PADDING),
-            Rounding::same(self.line_width),
+            CornerRadius::same(self.line_width as u8),
             self.background_color,
         );
 
@@ -136,7 +136,7 @@ impl<'a, P: Param> ParamCheckbox<'a, P> {
         if hover {
             ui.painter().rect_filled(
                 response.rect.shrink(PADDING * 1.1_f32 + self.line_width),
-                Rounding::same(self.line_width),
+                CornerRadius::same(self.line_width as u8),
                 self.highlight_color.linear_multiply(0.0075_f32),
             );
         }
@@ -146,15 +146,16 @@ impl<'a, P: Param> ParamCheckbox<'a, P> {
         // outline
         ui.painter().rect_stroke(
             response.rect.shrink(PADDING),
-            Rounding::same(self.line_width),
+            CornerRadius::same(self.line_width as u8),
             stroke_outline,
+            nih_plug_egui::egui::StrokeKind::Middle,
         );
     }
 
     fn draw_handle_rect(&self, ui: &mut Ui, rect: Rect, val: bool, id: Id) {
         ui.painter().rect_filled(
             rect,
-            Rounding::same(self.line_width),
+            CornerRadius::same(self.line_width as u8),
             // Interpolate between on and off colors
             self.off_color.gamma_multiply(0.5_f32).lerp_to_gamma(
                 self.on_color,
