@@ -1,8 +1,6 @@
 use nih_plug::buffer::Buffer;
 use nih_plug::util;
 
-use super::SAMPLES;
-
 // Get RMS value from buffer
 pub(crate) fn get_rms(buf: &Buffer) -> f32 {
     let slice = buf.as_slice_immutable();
@@ -49,10 +47,11 @@ pub(crate) fn get_mean_loudness(buf: &mut Buffer) -> f32 {
 
 // Convert vectors to a buffer
 pub(crate) fn buffer_from_vec<'a>(l: &'a mut Vec<f32>, r: &'a mut Vec<f32>) -> Buffer<'a> {
+    assert_eq!(l.len(), r.len());
     let mut buf = Buffer::default();
 
     unsafe {
-        buf.set_slices(SAMPLES, |slices| {
+        buf.set_slices(l.len(), |slices| {
             *slices = vec![l, r];
         })
     }

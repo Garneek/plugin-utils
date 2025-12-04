@@ -2,11 +2,8 @@ use std::sync::Arc;
 
 use std::time::{Duration, Instant};
 
-mod file_processing;
-use file_processing::*;
-
-mod points_processing;
-use points_processing::*;
+use crate::core::file_processing::*;
+use crate::core::points_processing::*;
 
 use plotters::chart::ChartBuilder;
 use plotters::prelude::BitMapBackend;
@@ -58,6 +55,19 @@ fn rescale_value(param_data: &PlotParamData, val: f32) -> f32 {
     param_data.param_min + val * (param_data.param_max - param_data.param_min) / RESOLUTION as f32
 }
 
+// Gets a path for the plot/data depending on type
+// plot is wheter the path should be to plot or data true for plot
+pub(crate) fn get_path(target_path: &str, plot_type: PlotType, plot: bool) -> String {
+    target_path.to_string()
+        + "-"
+        + match plot_type {
+            PlotType::Rms => "rms",
+            PlotType::Peak => "peak",
+            PlotType::MeanLoudness => "mean-peak",
+        }
+        + if plot { "-plot.png" } else { "-data.txt" }
+}
+
 // fix later, the border is expanding proportional to the coordinate, not the size
 fn expand_border(val: f32, min: bool) -> f32 {
     val * if (val.signum() <= 0_f32 && min) || (val.signum() > 0_f32 && !min) {
@@ -81,7 +91,7 @@ where
     let mut points = vec![(0_f32, 0_f32); RESOLUTION + 1];
 
     let read_file_instant = Instant::now();
-    let (mut a, mut b) = read_data(audio_path);
+    let (mut a, mut b) = read_data(audio_path, SAMPLE_RATE * 30, SAMPLES);
     println!("File reading time: {:?}", read_file_instant.elapsed());
 
     let mut buf = buffer_from_vec(&mut a, &mut b);
@@ -159,18 +169,21 @@ where
 ///
 /// `param_name-plot_type-data.txt` for data of the points
 ///
-/// To use this function, in your plugin `Cargo.toml` add a feature `test`
+/// To use this function, in your plugin `Cargo.toml` add a feature `benchmark` and 'test'
+///
+/// 'benchmark' will enable this function and other benchmark utilities, while 'test' will block automatic reading of param values
+/// by your algorithm
 ///
 /// ```
-/// test = ["plugin-utils/test"]
+/// benchmark = ["plugin-utils/benchmark", "plugin-utils/test"]
+///
 /// ```
 ///
 /// Create/go to your `main.rs` file and add a main function
 ///
 /// ```
-/// #[cfg(feature = "test")]
+/// #[cfg(feature = "benchmark")]
 /// fn main() {
-///     // use in the main function, to only look for these when "test" feature is on
 ///     use my_plugin::MyParams;
 ///     use my_plugin::MyParamsBlock;
 ///     use plugin_utils::dsp_utils::plot;
@@ -215,7 +228,7 @@ pub fn plot<SCP>(
 ) where
     SCP: SingleChannelProcessor,
 {
-    let mut proc: DspCoreProcessor<SCP> = DspCoreProcessor::new(params.clone(), block_size, 2);
+    let mut proc: DspCoreProcessor<SCP> = DspCoreProcessor::new(params, block_size, 2);
     zero_params(&mut proc.params_block);
 
     let mut points = get_points::<SCP>(proc, change_param, param_data, audio_path, plot_type);

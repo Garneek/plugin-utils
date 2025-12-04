@@ -1,4 +1,5 @@
 mod dct;
+pub use dct::DCT;
 
 /// Mdct processor
 ///
@@ -68,9 +69,15 @@ impl MDCT {
     /// `block` needs to be of length `block_size`
     ///
     /// `output_block` needs to be of length `block_size * 2`
-
-    // NOTE add assertion for above statement
+    ///
+    /// This will be asserted if built with `benchmark` feature
     pub fn mdct(&mut self, block: &[f32], output_block: &mut [f32]) {
+        #[cfg(feature = "benchmark")]
+        {
+            assert_eq!(block.len(), self.block_size);
+            assert_eq!(output_block.len(), self.block_size * 2);
+        }
+
         self.dct_buffer[self.block_size..self.block_size * 2]
             .copy_from_slice(&block[0..self.block_size]);
 
@@ -87,9 +94,15 @@ impl MDCT {
     /// `dct_block` needs to be of length `block_size * 2`
     ///
     /// `output_block` needs to be of length `block_size`
-
-    // NOTE add assertion for above statement
+    ///
+    /// This will be asserted if built with `benchmark` feature
     pub fn imdct(&mut self, dct_block: &mut [f32], output_block: &mut [f32]) {
+        #[cfg(feature = "benchmark")]
+        {
+            assert_eq!(output_block.len(), self.block_size);
+            assert_eq!(dct_block.len(), self.block_size * 2);
+        }
+
         self.dct.idct(dct_block, self.temp_buffer.as_mut_slice());
 
         for i in 0..self.block_size {

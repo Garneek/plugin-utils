@@ -1,3 +1,9 @@
+// TODO:
+// Window structure that takes in some trait object
+// Rewrite dct to use said trait object
+// Add more algorithms, fft, ifft
+// Some utils for wavetables, linear interpolation and so on
+
 //! DSP utility functions for nih_plug
 //!
 //! Includes [`Buffer`] abstraction using [`DspCoreProcessor`], as well as some general DSP functions and structures.
@@ -106,17 +112,24 @@ use nih_plug::buffer::Buffer;
 use nih_plug::params::Params;
 use nih_plug::prelude::ProcessStatus;
 
-#[cfg(feature = "test")]
+mod core;
+
+#[cfg(feature = "benchmark")]
 mod plotter;
 
-#[cfg(feature = "test")]
+#[cfg(feature = "benchmark")]
 pub use plotter::*;
+
+#[cfg(feature = "benchmark")]
+mod benchmark;
+
+#[cfg(feature = "benchmark")]
+pub use benchmark::*;
 
 mod misc;
 pub use misc::*;
 
-mod mdct;
-pub use mdct::MDCT;
+pub mod algorithms;
 
 /// A trait used to process a single channel.
 ///
@@ -182,7 +195,11 @@ pub trait SingleChannelProcessor {
     ///
     /// Allocate all data you need here. `block_size` is the length of all blocks in the process function. It is also what
     /// you set [`DspCoreProcessor`] to divide the blocks supplied by DAW to.
-    fn new(block_size: usize) -> Self;
+    fn new(
+        block_size: usize,
+        sample_rate: f32,
+        params: Arc<<Self::ParamsBlock as ParamsBlock>::Params>,
+    ) -> Self;
 
     /// Process single block.
     ///
@@ -337,11 +354,12 @@ impl<SCP: SingleChannelProcessor> DspCoreProcessor<SCP> {
         params: Arc<<<SCP as SingleChannelProcessor>::ParamsBlock as ParamsBlock>::Params>,
         block_size: usize,
         channels: usize,
+        sample_rate: f32,
     ) -> Self {
         Self {
             channel_processor: (0..channels)
                 .into_iter()
-                .map(|_| SCP::new(block_size))
+                .map(|_| SCP::new(block_size, sample_rate, params.clone()))
                 .collect(),
             overflow: block_size,
             temp: vec![0_f32; block_size],
@@ -351,7 +369,6 @@ impl<SCP: SingleChannelProcessor> DspCoreProcessor<SCP> {
             )),
 
             params_block: SCP::ParamsBlock::new(params, block_size),
-
             block_size,
             channels,
         }
@@ -459,7 +476,7 @@ mod tests {
     }
     impl SingleChannelProcessor for Single {
         type ParamsBlock = Block;
-        fn new(block_size: usize) -> Self {
+        fn new(block_size: usize, _sample_rate: f32, _params: Arc<ImplementsParams>) -> Self {
             Self { block_size }
         }
         fn process(
@@ -467,7 +484,7 @@ mod tests {
             block: &[f32],
             output: &mut [f32],
             _params_block: &Self::ParamsBlock,
-        ) -> nih_plug::plugin::ProcessStatus {
+        ) -> nih_plug::prelude::ProcessStatus {
             assert_eq!(self.block_size, block.len());
             assert_eq!(self.block_size, output.len());
 
@@ -494,7 +511,7 @@ mod tests {
         }
 
         let mut proc: DspCoreProcessor<Single> =
-            DspCoreProcessor::new(Arc::new(ImplementsParams {}), 23, 3);
+            DspCoreProcessor::new(Arc::new(ImplementsParams {}), 23, 3, 0_f32);
 
         proc.process(&mut buffer);
 
