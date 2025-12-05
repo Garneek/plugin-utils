@@ -9,3 +9,4 @@ pub use checkbox::ParamCheckbox;
 mod style;
 pub use style::ferra_color;
 pub use style::WidgetStyle;
+pub use style::premult_color32;
