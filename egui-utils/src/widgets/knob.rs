@@ -98,7 +98,7 @@ impl<'a, P: Param> Widget for ArcKnob<'a, P> {
             painter.rect_filled(
                 rect.shrink(self.style.text_size / 8_f32),
                 CornerRadius::same(self.style.background_radius),
-                self.style.highlight_color.gamma_multiply(0.075),
+                self.style.text_backdrop_color,
             );
 
             let label_pos = rect.center();

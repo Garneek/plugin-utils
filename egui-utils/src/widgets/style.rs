@@ -30,6 +30,15 @@ pub mod ferra_color {
 
 use ferra_color::*;
 
+pub const fn premult_color32(rgb_color: Color32, alpha: f32) -> Color32 {
+    Color32::from_rgba_premultiplied(
+        ((rgb_color.r() as f32) * alpha) as u8,
+        ((rgb_color.g() as f32) * alpha) as u8,
+        ((rgb_color.b() as f32) * alpha) as u8,
+        (alpha * 256_f32) as u8,
+    )
+}
+
 #[derive(Clone, Copy)]
 pub struct WidgetStyle {
     pub element_size: f32,
@@ -37,6 +46,7 @@ pub struct WidgetStyle {
     pub line_width: f32,
     pub text_color: Color32,
     pub text_size: f32,
+    pub text_backdrop_color: Color32,
     pub text_value_size: f32,
     pub element_main_color: Color32,
     pub element_accent_color: Color32,
@@ -60,6 +70,7 @@ impl WidgetStyle {
             line_width: 4_f32,
             text_color: FERRA_BLUSH,
             text_size: 16_f32,
+            text_backdrop_color: Color32::from_rgba_premultiplied(65, 54, 58, 150),
             text_value_size: -5_f32,
             element_main_color: FERRA_BARK,
             element_accent_color: FERRA_ROSE,
@@ -106,6 +117,11 @@ impl WidgetStyle {
 
     pub const fn set_text_size(mut self, n: f32) -> Self {
         self.text_size = n;
+        self
+    }
+
+    pub const fn set_text_backdrop_color(mut self, n: Color32) -> Self {
+        self.text_backdrop_color = n;
         self
     }
 
