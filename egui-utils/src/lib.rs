@@ -10,3 +10,4 @@ pub use widgets::ParamCheckbox;
 
 pub use widgets::ferra_color;
 pub use widgets::WidgetStyle;
+pub use widgets::premult_color32;
